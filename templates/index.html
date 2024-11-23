@@ -41,9 +41,9 @@ Home
                 <select name="kategori" id="kategori" onchange="this.form.submit()"
                     class="block px-4 py-2 text-base text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option disable>-- Categories --</option>
-                    <option value="">Show All</option>
+                    <option value="" class="font-bold">Show All</option>
                     {% for category in categories %}
-                    <option value="{{ category.id }}" {% if selected_category_id==category.id %}selected{% endif %}>
+                    <option value="{{ category.id }}" {% if selected_category_id==category.id %}selected{% endif %} >
                         {{ category.nama }}
                     </option>
                     {% endfor %}
@@ -60,13 +60,13 @@ Home
                 <p class="px-2 text-center">No</p>
 
                 <!-- Title Column -->
-                <div class="w-1/6 flex-none">Title</div>
+                <div class="w-1/6 flex-none pr-2">Title</div>
 
                 <!-- Author Column -->
-                <div class="w-1/6 flex-none">Author</div>
+                <div class="w-1/4 flex-none pr-4">Author</div>
 
                 <!-- Categories Column -->
-                <div class="w-fit flex-auto">Categories</div>
+                <div class="w-fit flex-auto pr-4">Categories</div>
 
                 <!-- Borrower Column -->
                 <div class="w-1/6 flex-none text-center">Borrower</div>
@@ -81,17 +81,17 @@ Home
                 <p class="px-2 text-center">{{ loop.index }}</p>
 
                 <!-- Title Column -->
-                <div class="w-1/6 flex-none">
+                <div class="w-1/6 flex-none pr-2">
                     <h3 class="font-semibold text-gray-800 truncate">{{ book.judul }}</h3>
                 </div>
 
                 <!-- Author Column -->
-                <div class="w-1/6 flex-none">
+                <div class="w-1/4 flex-none pr-4">
                     <p class="text-sm text-gray-600 truncate">Author: {{ book.pengarang }}</p>
                 </div>
 
                 <!-- Categories Column -->
-                <div class="w-fit flex-auto">
+                <div class="w-fit flex-auto pr-4">
                     <p class="text-sm text-gray-600 truncate">Categories:</p>
                     <p class="text-sm text-gray-600 truncate">
                         {% for category in book.categories %}

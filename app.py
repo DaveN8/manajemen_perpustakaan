@@ -110,6 +110,9 @@ def edit_member(id):
 def delete_member(id):
     member = session.query(Member).filter(Member.id == id).first()
     if member:
+        # Mengosongkan kolom anggota_id pada tabel buku yang dipinjam oleh anggota ini
+        session.query(Book).filter(Book.anggota_id == id).update({"anggota_id": None})
+
         session.delete(member)  # Delete from the database
         session.commit()
         flash("Anggota berhasil dihapus!")
