@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Daftar Member
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+    <!-- Button Section -->
+    <div class="flex justify-between mb-6">
+        <a href="/" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded" type="button">
+            Kembali
+        </a>
+        <a href="/add_member" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded"
+            type="button">
+            Tambah Member
+        </a>
+    </div>
+
+    <!-- Book List Section -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold mb-4">List Member</h2>
+
+        <!-- Show Flash Message -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4 mb-6">
+            <ul class="flashes">
+                <li class="alert alert-warning text-red-500 text-xl font-bold">{{ messages[-1] }}</li>
+            </ul>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% if members %}
+        <ul class="space-y-4">
+            {% for member in members %}
+            <li class="flex justify-between items-center border-b py-2">
+                <div>
+                    <h3 class="font-semibold text-gray-800">{{member['nama']}}</h3>
+                    <p class="text-sm text-gray-600">{{member['email']}}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="{{ url_for('edit_member', id=member.id) }}"
+                        class="text-center text-sm bg-green-100 text-green-500 px-3 py-1 rounded hover:bg-green-200">Edit</a>
+                    <form action="{{ url_for('delete_member', id=member.id) }}" method="POST">
+                        <button type="submit"
+                            class="text-center text-sm bg-blue-100 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-blue-100">
+                            Delete
+                        </button>
+                </div>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-500">Empty Member</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

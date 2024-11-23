@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Add Member
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Menambah Buku Baru</h2>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="bg-white p-6 rounded-lg shadow-md space-y-4 mb-6">
+        <ul class="flashes">
+            <!-- {% for message in messages %} -->
+            <li class="alert alert-warning text-red-500 text-xl font-bold">{{ messages[-1] }}</li>
+            <!-- {% endfor %} -->
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Member Creation Form -->
+    <form method="POST" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Buku: {{ book.judul }}, oleh: {{ book.pengarang }}</h2>
+
+        <!-- Member -->
+        <div class="w-full">
+            <label for="anggota_id" class="block text-lg font-medium text-gray-700 my-4">Pilih Anggota:</label>
+            <select name="anggota_id" id="anggota_id"
+            class="rounded text-blue-500 focus:ring focus:ring-blue-200 p-4 w-full" required>
+            {% for member in members %}
+            <option value="{{member.id}}" class="p-2">{{member.nama}}</option>
+            {% endfor %}
+            </select>
+        </div>
+        
+
+        <!-- Submit Button -->
+        <div>
+            <button type="submit"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded shadow-sm">
+                Add Pinjaman
+            </button>
+        </div>
+    </form> 
+
+    <div class="flex justify-between my-6">
+        <a href="/" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded" type="button">
+            Kembali
+        </a>
+    </div>
+
+    
+</div>
+
+{% endblock %}
