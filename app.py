@@ -2,90 +2,124 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from models import get_session, Member, Book, Category, BookCategory
 
 app = Flask(__name__)
-app.secret_key = 'WhatIsThis'  # Ganti dengan secret key yang aman
+app.secret_key = "WhatIsThis"  # Ganti dengan secret key yang aman
 
 # Inisialisasi session database
 session = get_session()
 
-@app.route('/', methods=['GET', 'POST'])
+
+@app.route("/", methods=["GET", "POST"])
 def index():
     # Ambil semua kategori dari database untuk ditampilkan di filter
     categories = session.query(Category).all()
     members = session.query(Member).all()
 
     # Ambil kategori yang dipilih dari parameter URL
-    selected_category_id = request.args.get('kategori', None)
+    selected_category_id = request.args.get("kategori", None)
 
     if selected_category_id:
         # Jika ada kategori yang dipilih, ambil buku yang sesuai
-        books = session.query(Book).join(BookCategory).filter(BookCategory.category_id == selected_category_id).all()
+        books = (
+            session.query(Book)
+            .join(BookCategory)
+            .filter(BookCategory.category_id == selected_category_id)
+            .all()
+        )
     else:
         # Jika tidak ada kategori yang dipilih, ambil semua buku
         books = session.query(Book).all()
 
-    return render_template('index.html', books=books, categories=categories, members=members)
+    return render_template(
+        "index.html", books=books, categories=categories, members=members
+    )
+
 
 # Route untuk mengelola anggota (CRUD)
-@app.route('/members')
+@app.route("/members")
 def members():
     all_members = session.query(Member).all()
-    return render_template('member/view_member.html', members=all_members)
+    return render_template("member/view_member.html", members=all_members)
 
-@app.route('/add_member', methods=['GET','POST'])
+
+@app.route("/add_member", methods=["GET", "POST"])
 def add_member():
-    if request.method == 'POST':
-        nama = request.form['nama']
-        email = request.form['email']
-        
+    if request.method == "POST":
+        nama = request.form["nama"]
+        email = request.form["email"]
+
         if not nama or not email:
-            flash('Nama dan Email tidak boleh kosong!')
-            return redirect(url_for('members'))
+            flash("Nama dan Email tidak boleh kosong!")
+            return redirect(url_for("members"))
+        
+        # Validasi: Cek apakah anggota dengan nama yang sama sudah ada
+        existing_member = session.query(Member).filter_by(nama=nama).first()
+        if existing_member:
+            flash('Anggota dengan nama ini sudah ada. Silakan gunakan nama lain.')
+            return redirect(url_for("add_member"))
 
         new_member = Member(nama=nama, email=email)
-        
+
         session.add(new_member)
         session.commit()
-        
-        flash('Anggota berhasil ditambahkan!')
-        return redirect(url_for('members'))
-    
-    return render_template('member/add_member.html')
 
-@app.route('/edit_member/<int:id>', methods=['GET', 'POST'])
+        flash("Anggota berhasil ditambahkan!")
+        return redirect(url_for("members"))
+
+
+    return render_template("member/add_member.html")
+
+
+@app.route("/edit_member/<int:id>", methods=["GET", "POST"])
 def edit_member(id):
     member = session.query(Member).filter(Member.id == id).first()
 
     if not member:
-        flash('Anggota tidak ditemukan!')
-        return redirect(url_for('members'))
+        flash("Anggota tidak ditemukan!")
+        return redirect(url_for("members"))
 
-    if request.method == 'POST':
-        member.nama = request.form['nama']
-        member.email = request.form['email']
-        
+    if request.method == "POST":
+        nama = request.form["nama"]
+        email = request.form["email"]
+
         if not member.nama or not member.email:
-            flash('Nama dan Email tidak boleh kosong!')
-            return render_template('member/edit_member.html', member=member)  
+            flash("Nama dan Email tidak boleh kosong!")
+            return render_template("member/edit_member.html", member=member)
+        
+        # Validasi: Cek apakah anggota dengan nama yang sama sudah ada
+        existing_member = session.query(Member).filter_by(nama=nama).first()
+        if existing_member and existing_member.id != id:
+            flash('Anggota dengan nama ini sudah ada. Silakan gunakan nama lain.')
+            return redirect(url_for('edit_member', id=id))
+        
+        # Validasi: Cek apakah anggota dengan email yang sama sudah ada
+        existing_member_by_email = session.query(Member).filter_by(email=email).first()
+        if existing_member_by_email and existing_member_by_email.id != id:
+            flash('Anggota dengan email ini sudah ada. Silakan gunakan email lain.')
+            return redirect(url_for('edit_member', id=id))
 
+        member.nama = nama
+        member.email = email
         session.commit()
-        flash('Anggota berhasil diperbarui!')
-        return redirect(url_for('members'))
+        flash("Anggota berhasil diperbarui!")
+        return redirect(url_for("members"))
 
-    return render_template('member/edit_member.html', member=member)
+    return render_template("member/edit_member.html", member=member)
 
-@app.route('/delete_member/<int:id>', methods=['POST']) 
+
+@app.route("/delete_member/<int:id>", methods=["POST"])
 def delete_member(id):
     member = session.query(Member).filter(Member.id == id).first()
     if member:
         session.delete(member)  # Delete from the database
         session.commit()
-        flash('Anggota berhasil dihapus!')
+        flash("Anggota berhasil dihapus!")
     else:
-        flash('Anggota tidak ditemukan!')
-    return redirect(url_for('members'))
+        flash("Anggota tidak ditemukan!")
+    return redirect(url_for("members"))
+
 
 # Route untuk mengelola buku (CRUD)
-@app.route('/books')
+@app.route("/books")
 def books():
     all_books = session.query(Book).all()
     all_members = session.query(Member).all()
@@ -96,18 +130,25 @@ def books():
         else:
             print(f"Buku: {book.judul}, Status: Tersedia")
 
-    return render_template('buku/view_buku.html', books=all_books, members=all_members)
+    return render_template("buku/view_buku.html", books=all_books, members=all_members)
 
-@app.route('/add_book', methods=['GET', 'POST'])
+
+@app.route("/add_book", methods=["GET", "POST"])
 def add_book():
-    if request.method == 'POST':
-        judul = request.form['judul']
-        pengarang = request.form['pengarang']
-        anggota_id = request.form.get('anggota_id') or None
-        category_ids = request.form.getlist('category_id')
+    if request.method == "POST":
+        judul = request.form["judul"]
+        pengarang = request.form["pengarang"]
+        anggota_id = request.form.get("anggota_id") or None
+        category_ids = request.form.getlist("category_id")
 
         if not judul or not pengarang or not category_ids:
-            flash('Judul, Pengarang, dan Kategori tidak boleh kosong!')
+            flash("Judul, Pengarang, dan Kategori tidak boleh kosong!")
+            return redirect(url_for("add_book"))
+        
+        # Validasi: Cek apakah buku dengan judul yang sama sudah ada
+        existing_book = session.query(Book).filter_by(judul=judul).first()
+        if existing_book:
+            flash('Buku dengan judul ini sudah ada. Silakan gunakan judul lain.')
             return redirect(url_for('add_book'))
 
         new_book = Book(judul=judul, pengarang=pengarang, anggota_id=anggota_id)
@@ -120,27 +161,34 @@ def add_book():
 
         session.commit()
 
-        flash('Buku berhasil ditambahkan!')
+        flash("Buku berhasil ditambahkan!")
 
-        return redirect(url_for('books'))
-    
+        return redirect(url_for("books"))
+
     all_categories = session.query(Category).all()
-    return render_template('buku/add_buku.html', categories=all_categories)
+    return render_template("buku/add_buku.html", categories=all_categories)
 
-@app.route('/edit_book/<int:id>', methods=['GET', 'POST'])
+
+@app.route("/edit_book/<int:id>", methods=["GET", "POST"])
 def edit_book(id):
     book = session.query(Book).filter(Book.id == id).first()
 
-    if request.method == 'POST':
-        book.judul = request.form['judul']
-        book.pengarang = request.form['pengarang']
-        book.anggota_id = request.form.get('anggota_id') or None
-        category_ids = request.form.getlist('category_id')
+    if request.method == "POST":
+        book.judul = request.form["judul"]
+        book.pengarang = request.form["pengarang"]
+        book.anggota_id = request.form.get("anggota_id") or None
+        category_ids = request.form.getlist("category_id")
 
         if not book.judul or not book.pengarang or not category_ids:
-            flash('Judul, Pengarang, Kategori tidak boleh kosong!')
-            return redirect(url_for('edit_book', id=id))
+            flash("Judul, Pengarang, Kategori tidak boleh kosong!")
+            return redirect(url_for("edit_book", id=id))
         
+        # Validasi: Cek apakah buku dengan judul yang sama sudah ada
+        existing_book = session.query(Book).filter_by(judul=book.judul).first()
+        if existing_book and existing_book.id != id:
+            flash('Buku dengan judul ini sudah ada. Silakan gunakan judul lain.')
+            return redirect(url_for('edit_book', id=id))
+
         session.query(BookCategory).filter(BookCategory.book_id == id).delete()
         session.flush()
         session.commit()
@@ -150,110 +198,135 @@ def edit_book(id):
             session.add(book_category)
 
         session.commit()
-        flash('Buku berhasil diperbarui!')
-        return redirect(url_for('books'))
-    
+        flash("Buku berhasil diperbarui!")
+        return redirect(url_for("books"))
+
     all_categories = session.query(Category).all()
     selected_categories = [bc.category_id for bc in book.categories]
 
-    return render_template('buku/edit_buku.html', book=book, categories=all_categories, selected_categories=selected_categories)
+    return render_template(
+        "buku/edit_buku.html",
+        book=book,
+        categories=all_categories,
+        selected_categories=selected_categories,
+    )
 
-@app.route('/delete_book/<int:id>', methods=['POST'])
+
+@app.route("/delete_book/<int:id>", methods=["POST"])
 def delete_book(id):
     book = session.query(Book).filter(Book.id == id).first()
     if book:
         session.delete(book)
         session.commit()
-        flash('Buku berhasil dihapus!')
+        flash("Buku berhasil dihapus!")
     else:
-        flash('Buku tidak ditemukan!')
-    return redirect(url_for('books'))
+        flash("Buku tidak ditemukan!")
+    return redirect(url_for("books"))
+
 
 # Route untuk mengelola kategori (CRUD)
-@app.route('/categories')
+@app.route("/categories")
 def categories():
     all_categories = session.query(Category).all()
-    return render_template('kategori/view_kategori.html', categories=all_categories)
+    return render_template("kategori/view_kategori.html", categories=all_categories)
 
-@app.route('/add_category', methods=['GET', 'POST'])
+
+@app.route("/add_category", methods=["GET", "POST"])
 def add_category():
-    if request.method == 'POST':
-        nama_kategori = request.form['nama']
+    if request.method == "POST":
+        nama_kategori = request.form["nama"]
 
         if not nama_kategori:
-            flash('Nama kategori tidak boleh kosong!')
-            return redirect(url_for('categories'))
+            flash("Nama kategori tidak boleh kosong!")
+            return redirect(url_for("categories"))
+        
+        # Validasi: Cek apakah kategori sudah ada
+        existing_category = session.query(Category).filter_by(nama=nama_kategori).first()
+        if existing_category:
+            flash('Kategori dengan nama ini sudah ada. Silakan gunakan nama lain.')
+            return redirect(url_for('add_category'))
 
         new_category = Category(nama=nama_kategori)
 
         session.add(new_category)
         session.commit()
 
-        flash('Kategori berhasil ditambahkan!')
+        flash("Kategori berhasil ditambahkan!")
 
-        return redirect(url_for('categories'))
-    
-    return render_template('kategori/add_kategori.html')
+        return redirect(url_for("categories"))
 
-@app.route('/edit_category/<int:id>', methods=['GET', 'POST'])
+    return render_template("kategori/add_kategori.html")
+
+
+@app.route("/edit_category/<int:id>", methods=["GET", "POST"])
 def edit_category(id):
     category = session.query(Category).filter(Category.id == id).first()
 
-    if request.method == 'POST':
-        category.nama = request.form['nama']
+    if request.method == "POST":
+        nama = request.form["nama"]
 
         if not category.nama:
-            flash('Nama kategori tidak boleh kosong!')
+            flash("Nama kategori tidak boleh kosong!")
+            return redirect(url_for("edit_category", id=id))
+        
+        # Validasi: Cek apakah kategori dengan nama yang sama sudah ada
+        existing_category = session.query(Category).filter_by(nama=nama).first()
+        if existing_category and existing_category.id != id:
+            flash('Kategori dengan nama ini sudah ada. Silakan gunakan nama lain.')
             return redirect(url_for('edit_category', id=id))
 
+        category.nama = nama
         session.commit()
-        flash('Kategori berhasil diperbarui!')
-        return redirect(url_for('categories'))
+        flash("Kategori berhasil diperbarui!")
+        return redirect(url_for("categories"))
 
-    return render_template('kategori/edit_kategori.html', category=category)
+    return render_template("kategori/edit_kategori.html", category=category)
 
-@app.route('/delete_category/<int:id>', methods=['POST'])
+
+@app.route("/delete_category/<int:id>", methods=["POST"])
 def delete_category(id):
     category = session.query(Category).filter(Category.id == id).first()
     if category:
         session.delete(category)
         session.commit()
-        flash('Kategori berhasil dihapus!')
+        flash("Kategori berhasil dihapus!")
     else:
-        flash('Kategori Tidak Ditemukan!')
-    return redirect(url_for('categories'))
+        flash("Kategori Tidak Ditemukan!")
+    return redirect(url_for("categories"))
+
 
 # Route Mengelola Pinjaman
-@app.route('/borrow_book/<int:id>', methods=['GET', 'POST'])
+@app.route("/borrow_book/<int:id>", methods=["GET", "POST"])
 def borrow_book(id):
     # Ambil buku berdasarkan ID
     book = session.query(Book).filter(Book.id == id).first()
 
-    if request.method == 'POST':
-        anggota_id = request.form['anggota_id']  # Ambil ID anggota dari formulir
+    if request.method == "POST":
+        anggota_id = request.form["anggota_id"]  # Ambil ID anggota dari formulir
 
         # Validasi: Pastikan ada anggota yang dipilih
         if not anggota_id:
-            flash('Silakan pilih anggota untuk meminjam buku!')
-            return redirect(url_for('borrow_book', id=id))
-        
+            flash("Silakan pilih anggota untuk meminjam buku!")
+            return redirect(url_for("borrow_book", id=id))
+
         # Cek apakah buku sudah dipinjam
         if book.anggota_id is not None:
-            flash('Buku ini sudah dipinjam oleh anggota lain!')
-            return redirect(url_for('/'))
+            flash("Buku ini sudah dipinjam oleh anggota lain!")
+            return redirect(url_for("/"))
 
         # Update ID anggota pada buku
         book.anggota_id = anggota_id
 
         session.commit()  # Simpan perubahan ke database
-        flash('Buku berhasil dipinjam!')
-        return redirect(url_for('index'))
+        flash("Buku berhasil dipinjam!")
+        return redirect(url_for("index"))
 
     # Jika metode GET, ambil semua anggota untuk ditampilkan di formulir
     all_members = session.query(Member).all()
-    return render_template('pinjam/add_pinjam.html', book=book, members=all_members)
+    return render_template("pinjam/add_pinjam.html", book=book, members=all_members)
 
-@app.route('/return_book/<int:id>', methods=['GET','POST'])
+
+@app.route("/return_book/<int:id>", methods=["GET", "POST"])
 def return_book(id):
     # Ambil buku berdasarkan ID
     book = session.query(Book).filter(Book.id == id).first()
@@ -262,9 +335,10 @@ def return_book(id):
     book.anggota_id = None
 
     session.commit()  # Simpan perubahan ke database
-    flash('Buku berhasil dikembalikan!')
-    
-    return redirect(url_for('index'))
+    flash("Buku berhasil dikembalikan!")
 
-if __name__ == '__main__':
+    return redirect(url_for("index"))
+
+
+if __name__ == "__main__":
     app.run(debug=True)

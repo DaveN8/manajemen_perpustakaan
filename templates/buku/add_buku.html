@@ -8,6 +8,17 @@ Create Buku
 <div class="max-w-4xl mx-auto py-8">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Menambah Buku Baru</h2>
 
+    <!-- Show Flash Message -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="bg-white p-6 rounded-lg shadow-md space-y-4 mb-6">
+        <ul class="flashes">
+            <li class="alert alert-warning text-red-500 text-xl font-bold">{{ messages[-1] }}</li>
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
+
     <!-- Buku create Form -->
     <form method="POST" class="bg-white p-6 rounded-lg shadow-md space-y-4">
         <!-- Judul -->

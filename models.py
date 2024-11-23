@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from database import Database
 
 # Inisialisasi SQLAlchemy
 Base = declarative_base()
@@ -50,6 +51,7 @@ class BookCategory(Base):
 
 # Fungsi untuk membuat koneksi database dan session
 def get_session():
+    db_connection = Database()
     engine = create_engine('mysql+mysqlconnector://root:@localhost/library_management')
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
