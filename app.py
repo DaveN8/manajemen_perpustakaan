@@ -177,7 +177,7 @@ def edit_book(id):
     book = session.query(Book).filter(Book.id == id).first()
 
     if request.method == "POST":
-        book.judul = request.form["judul"]
+        judul = request.form["judul"]
         book.pengarang = request.form["pengarang"]
         book.anggota_id = request.form.get("anggota_id") or None
         category_ids = request.form.getlist("category_id")
@@ -187,7 +187,7 @@ def edit_book(id):
             return redirect(url_for("edit_book", id=id))
         
         # Validasi: Cek apakah buku dengan judul yang sama sudah ada
-        existing_book = session.query(Book).filter_by(judul=book.judul).first()
+        existing_book = session.query(Book).filter_by(judul=judul).first()
         if existing_book and existing_book.id != id:
             flash('Buku dengan judul ini sudah ada. Silakan gunakan judul lain.')
             return redirect(url_for('edit_book', id=id))
@@ -199,6 +199,8 @@ def edit_book(id):
         for category_id in category_ids:
             book_category = BookCategory(book_id=book.id, category_id=category_id)
             session.add(book_category)
+
+        book.judul = judul
 
         session.commit()
         flash("Buku berhasil diperbarui!")

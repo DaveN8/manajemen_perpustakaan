@@ -29,6 +29,7 @@ Add Member
             <label for="anggota_id" class="block text-lg font-medium text-gray-700 my-4">Pilih Anggota:</label>
             <select name="anggota_id" id="anggota_id"
             class="rounded text-blue-500 focus:ring focus:ring-blue-200 p-4 w-full" required>
+            <option disable>-- Nama Member --</option>
             {% for member in members %}
             <option value="{{member.id}}" class="p-2">{{member.nama}}</option>
             {% endfor %}
